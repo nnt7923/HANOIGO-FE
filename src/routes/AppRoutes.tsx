@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { Shield, User } from 'lucide-react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { LoaderCircle, Shield } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -62,13 +62,14 @@ function RequireAuth({
   roles?: UserRole[]
 }) {
   const { user, bootstrapping } = useAuth()
+  const location = useLocation()
 
   if (bootstrapping) {
-    return <EmptyState icon={User} label="Loading session" />
+    return <EmptyState icon={LoaderCircle} label="Loading session" />
   }
 
   if (!user) {
-    return <EmptyState icon={User} label="Login required" />
+    return <Navigate replace state={{ from: location }} to="/login" />
   }
 
   if (roles && !roles.includes(user.role)) {

@@ -89,8 +89,8 @@ export function ItinerariesPage() {
     <section className="page-grid">
       <header className="page-header">
         <div>
-          <span className="eyebrow">Gemini, cache, fallback</span>
-          <h1>Trip planning</h1>
+          <span className="eyebrow">Personal routes</span>
+          <h1>Plan a Hanoi route</h1>
         </div>
         <div className="segmented compact-tabs">
           <button className={view === 'current' ? 'selected' : ''} onClick={() => setView('current')} type="button">

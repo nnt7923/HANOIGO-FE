@@ -97,9 +97,9 @@ export function GoogleLoginButton({
 
   if (!GOOGLE_CLIENT_ID) {
     return (
-      <button className="ghost-button" disabled type="button">
-        Google unavailable
-      </button>
+      <div className="google-login-disabled">
+        <span>Google sign-in is unavailable</span>
+      </div>
     )
   }
 

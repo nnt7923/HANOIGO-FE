@@ -8,8 +8,10 @@ import { GoogleLoginButton } from './GoogleLoginButton'
 
 export function AuthPanel({
   initialMode = 'login',
+  onAuthSuccess,
 }: {
   initialMode?: 'login' | 'register' | 'verify' | 'reset'
+  onAuthSuccess?: () => void
 }) {
   const { login, register, verifyOtp, resendOtp, forgotPassword, resetPassword, loginGoogle } = useAuth()
   const [mode, setMode] = useState<'login' | 'register' | 'verify' | 'reset'>(initialMode)
@@ -37,6 +39,12 @@ export function AuthPanel({
     setCooldownUntil(current + 60_000)
   }
 
+  function switchMode(nextMode: 'login' | 'register' | 'verify' | 'reset') {
+    setError('')
+    setStatus('')
+    setMode(nextMode)
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault()
     setError('')
@@ -45,6 +53,7 @@ export function AuthPanel({
     try {
       if (mode === 'login') {
         await login(email, password)
+        onAuthSuccess?.()
       }
       if (mode === 'register') {
         await register(name, email, password)
@@ -54,6 +63,7 @@ export function AuthPanel({
       }
       if (mode === 'verify') {
         await verifyOtp(email, code)
+        onAuthSuccess?.()
       }
       if (mode === 'reset') {
         if (code && newPassword) {
@@ -78,12 +88,17 @@ export function AuthPanel({
   return (
     <form className="auth-panel" onSubmit={submit}>
       <div className="segmented">
-        <button className={mode === 'login' ? 'selected' : ''} onClick={() => setMode('login')} type="button">
+        <button className={mode === 'login' ? 'selected' : ''} onClick={() => switchMode('login')} type="button">
           Login
         </button>
-        <button className={mode === 'register' ? 'selected' : ''} onClick={() => setMode('register')} type="button">
+        <button className={mode === 'register' ? 'selected' : ''} onClick={() => switchMode('register')} type="button">
           Register
         </button>
+      </div>
+
+      <div className="auth-mode-copy">
+        <strong>{getModeTitle(mode)}</strong>
+        <span>{getModeDescription(mode)}</span>
       </div>
 
       {mode === 'register' && <Field label="Name" value={name} onChange={setName} required />}
@@ -101,39 +116,97 @@ export function AuthPanel({
 
       <button className="primary-button" type="submit">
         <Send size={16} />
-        {mode === 'reset' && !code ? 'Send OTP' : 'Submit'}
+        {getSubmitLabel(mode, Boolean(code && newPassword))}
       </button>
-      <GoogleLoginButton
-        onCredential={async (credential) => {
-          setError('')
-          await loginGoogle(credential)
-        }}
-        onError={setError}
-      />
-      <div className="auth-links">
-        <button onClick={() => setMode('verify')} type="button">
-          Verify OTP
-        </button>
-        <button
-          disabled={cooldownSeconds > 0}
-          onClick={async () => {
-            setError('')
-            try {
-              await resendOtp(email, 'email_verification')
-              beginCooldown()
-              setStatus('OTP sent')
-            } catch (err) {
-              setError(getErrorMessage(err))
-            }
-          }}
-          type="button"
-        >
-          {cooldownSeconds > 0 ? `${cooldownSeconds}s` : 'Resend'}
-        </button>
-        <button onClick={() => setMode('reset')} type="button">
-          Reset
-        </button>
-      </div>
+
+      {(mode === 'login' || mode === 'register') && (
+        <>
+          <div className="auth-divider">
+            <span>or continue with</span>
+          </div>
+          <GoogleLoginButton
+            onCredential={async (credential) => {
+              setError('')
+              await loginGoogle(credential)
+              onAuthSuccess?.()
+            }}
+            onError={setError}
+          />
+        </>
+      )}
+
+      {mode === 'login' && (
+        <div className="auth-links">
+          <button onClick={() => switchMode('reset')} type="button">
+            Forgot password?
+          </button>
+          <button onClick={() => switchMode('verify')} type="button">
+            Verify email
+          </button>
+        </div>
+      )}
+
+      {mode === 'register' && (
+        <div className="auth-links">
+          <button onClick={() => switchMode('verify')} type="button">
+            Already have an OTP?
+          </button>
+        </div>
+      )}
+
+      {mode === 'verify' && (
+        <div className="auth-links stacked">
+          <button
+            disabled={cooldownSeconds > 0}
+            onClick={async () => {
+              setError('')
+              try {
+                await resendOtp(email, 'email_verification')
+                beginCooldown()
+                setStatus('OTP sent')
+              } catch (err) {
+                setError(getErrorMessage(err))
+              }
+            }}
+            type="button"
+          >
+            {cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : 'Resend verification OTP'}
+          </button>
+          <button onClick={() => switchMode('login')} type="button">
+            Back to login
+          </button>
+        </div>
+      )}
+
+      {mode === 'reset' && (
+        <div className="auth-links">
+          <button onClick={() => switchMode('login')} type="button">
+            Back to login
+          </button>
+        </div>
+      )}
     </form>
   )
+}
+
+function getModeTitle(mode: 'login' | 'register' | 'verify' | 'reset') {
+  if (mode === 'register') return 'Create your HanoiGo account'
+  if (mode === 'verify') return 'Verify your email'
+  if (mode === 'reset') return 'Reset your password'
+  return 'Welcome back'
+}
+
+function getModeDescription(mode: 'login' | 'register' | 'verify' | 'reset') {
+  if (mode === 'register') return 'Use email/password or Google to start planning.'
+  if (mode === 'verify') return 'Enter the OTP sent to your email address.'
+  if (mode === 'reset') return 'Submit your email first, then enter OTP and a new password.'
+  return 'Login with email/password or Google.'
+}
+
+function getSubmitLabel(mode: 'login' | 'register' | 'verify' | 'reset', hasResetFields: boolean) {
+  if (mode === 'login') return 'Login'
+  if (mode === 'register') return 'Create account'
+  if (mode === 'verify') return 'Verify email'
+  if (mode === 'reset' && hasResetFields) return 'Update password'
+  return 'Send reset OTP'
 }

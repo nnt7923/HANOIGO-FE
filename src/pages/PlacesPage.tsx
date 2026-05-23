@@ -1,23 +1,17 @@
-import { Compass, Flag, ImagePlus, MapPin, MessageSquareReply, RefreshCw, Search, Send, Star, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { RefreshCw, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { EmptyState } from '../components/ui/EmptyState'
-import { ImageStrip } from '../components/ui/ImageStrip'
 import { useAuth } from '../features/auth/hooks/useAuth'
-import { displayAuthor } from '../lib/display'
+import { AdvancedPlaceFilters } from '../features/places/components/AdvancedPlaceFilters'
+import { CategoryRail } from '../features/places/components/CategoryRail'
+import { DiscoverStats } from '../features/places/components/DiscoverStats'
+import { MapSelectionCard } from '../features/places/components/MapSelectionCard'
+import { PlaceDetailPanel } from '../features/places/components/PlaceDetailPanel'
+import { PlaceListPanel } from '../features/places/components/PlaceListPanel'
+import { TravelMap } from '../features/places/components/TravelMap'
+import { hasCoordinates } from '../features/places/components/discoverUtils'
 import { api, getErrorMessage } from '../services/hanoigo.api'
 import type { Place, PlaceCategory, Review } from '../types/api.type'
-
-const categories: Array<PlaceCategory | ''> = [
-  '',
-  'food',
-  'cafe',
-  'stay',
-  'attraction',
-  'workspace',
-  'transport',
-  'other',
-]
 
 export function PlacesPage() {
   const { user } = useAuth()
@@ -34,21 +28,31 @@ export function PlacesPage() {
   const [reviewFiles, setReviewFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const mappedCount = useMemo(() => places.filter(hasCoordinates).length, [places])
+  const averageRating = useMemo(() => {
+    const rated = places.filter((place) => Number.isFinite(place.ratingAverage) && place.ratingAverage > 0)
+    if (rated.length === 0) return '0.0'
+    return (rated.reduce((total, place) => total + place.ratingAverage, 0) / rated.length).toFixed(1)
+  }, [places])
 
-  async function loadPlaces() {
+  async function loadPlaces(nextCategory = category) {
     setLoading(true)
     setError('')
+    setCategory(nextCategory)
     try {
       const data = await api.places.list({
         q: query || undefined,
-        category: category || undefined,
+        category: nextCategory || undefined,
         longitude: longitude ? Number(longitude) : undefined,
         latitude: latitude ? Number(latitude) : undefined,
         radiusMeters: radiusMeters ? Number(radiusMeters) : undefined,
         limit: 24,
       })
       setPlaces(data)
-      if (!selected && data[0]) setSelected(data[0])
+      setSelected((current) => {
+        if (!current) return data[0] ?? null
+        return data.find((place) => place._id === current._id) ?? data[0] ?? null
+      })
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
@@ -116,141 +120,66 @@ export function PlacesPage() {
   }
 
   return (
-    <section className="page-grid">
-      <header className="page-header">
+    <section className="page-grid discover-page">
+      <header className="page-header travel-header">
         <div>
-          <span className="eyebrow">Published places</span>
-          <h1>Discover Hanoi spots</h1>
+          <span className="eyebrow">Live travel map</span>
+          <h1>Explore Hanoi by mood, route, and neighborhood.</h1>
+          <p>Find cafes, stays, landmarks, work spots, and local food with a real map view built around your next stop.</p>
         </div>
         <form
-          className="search-row"
+          className="search-row discover-search"
           onSubmit={(event) => {
             event.preventDefault()
-            loadPlaces()
+            loadPlaces(category)
           }}
         >
           <div className="search-box">
             <Search size={18} />
             <input aria-label="Search places" onChange={(event) => setQuery(event.target.value)} placeholder="Search" value={query} />
           </div>
-          <select aria-label="Category" onChange={(event) => setCategory(event.target.value as PlaceCategory | '')} value={category}>
-            {categories.map((item) => (
-              <option key={item || 'all'} value={item}>
-                {item || 'all'}
-              </option>
-            ))}
-          </select>
-          <input aria-label="Longitude" onChange={(event) => setLongitude(event.target.value)} placeholder="Lng" value={longitude} />
-          <input aria-label="Latitude" onChange={(event) => setLatitude(event.target.value)} placeholder="Lat" value={latitude} />
-          <input aria-label="Radius" onChange={(event) => setRadiusMeters(event.target.value)} placeholder="Radius" type="number" value={radiusMeters} />
           <button className="icon-button" title="Refresh" type="submit">
             <RefreshCw size={18} />
           </button>
         </form>
       </header>
 
+      <CategoryRail activeCategory={category} onSelect={loadPlaces} />
+      <AdvancedPlaceFilters
+        latitude={latitude}
+        longitude={longitude}
+        onLatitudeChange={setLatitude}
+        onLongitudeChange={setLongitude}
+        onRadiusMetersChange={setRadiusMeters}
+        radiusMeters={radiusMeters}
+      />
+      <DiscoverStats averageRating={averageRating} category={category} mappedCount={mappedCount} placesCount={places.length} radiusMeters={radiusMeters} />
+
       {error && <p className="surface-error">{error}</p>}
 
-      <div className="split-layout">
-        <div className="list-column">
-          {loading && <p className="muted">Loading</p>}
-          {places.map((place) => (
-            <button className={selected?._id === place._id ? 'place-card active' : 'place-card'} key={place._id} onClick={() => setSelected(place)} type="button">
-              <ImageStrip images={place.images} name={place.name} />
-              <div>
-                <strong>{place.name}</strong>
-                <span>
-                  <MapPin size={14} />
-                  {place.address}
-                </span>
-                <small>
-                  <Star size={14} />
-                  {place.ratingAverage?.toFixed?.(1) ?? '0.0'} ({place.ratingCount})
-                </small>
-              </div>
-            </button>
-          ))}
+      <div className="discover-layout">
+        <PlaceListPanel loading={loading} onSelect={setSelected} places={places} selectedPlaceId={selected?._id} />
+
+        <div className="map-stage">
+          <TravelMap places={places} selectedPlaceId={selected?._id} onSelectPlace={setSelected} />
+          {selected && <MapSelectionCard place={selected} />}
         </div>
 
-        <div className="detail-column">
-          {selected ? (
-            <>
-              <div className="detail-hero">
-                <ImageStrip images={selected.images} name={selected.name} large />
-                <div>
-                  <span className="pill">{selected.category}</span>
-                  <h2>{selected.name}</h2>
-                  <p>{selected.description}</p>
-                  <p className="meta-line">
-                    <MapPin size={16} />
-                    {selected.address}
-                  </p>
-                </div>
-              </div>
-              <div className="toolbar">
-                <span className="metric">
-                  <Star size={16} />
-                  {selected.ratingAverage?.toFixed?.(1) ?? '0.0'}
-                </span>
-                <span className="metric">{selected.status}</span>
-                <span className="metric">{selected.tags.join(', ') || 'no tags'}</span>
-              </div>
-
-              {user && (
-                <form className="inline-form" onSubmit={submitReview}>
-                  <select aria-label="Rating" onChange={(event) => setRating(Number(event.target.value))} value={rating}>
-                    {[5, 4, 3, 2, 1].map((value) => (
-                      <option key={value} value={value}>
-                        {value} stars
-                      </option>
-                    ))}
-                  </select>
-                  <input onChange={(event) => setComment(event.target.value)} placeholder="Review" required value={comment} />
-                  <label className="file-input compact-file">
-                    <ImagePlus size={15} />
-                    <span>{reviewFiles.length > 0 ? `${reviewFiles.length}` : 'Images'}</span>
-                    <input accept="image/*" multiple onChange={(event) => setReviewFiles(Array.from(event.target.files ?? []))} type="file" />
-                  </label>
-                  <button className="primary-button compact" type="submit">
-                    <Send size={15} />
-                    Post
-                  </button>
-                </form>
-              )}
-
-              <div className="item-list">
-                {reviews.map((review) => (
-                  <article className="review-item" key={review._id}>
-                    <strong>{displayAuthor(review.user)}</strong>
-                    <span>
-                      <Star size={14} />
-                      {review.rating}
-                    </span>
-                    <p>{review.comment}</p>
-                    <ImageStrip images={review.images} name="Review" />
-                    {review.ownerReply && <small>Reply: {review.ownerReply}</small>}
-                    <div className="toolbar">
-                      <button className="ghost-button slim" disabled={!user} onClick={() => reportReview(review)} type="button">
-                        <Flag size={15} />
-                        Report
-                      </button>
-                      <button className="ghost-button slim" disabled={!user} onClick={() => replyReview(review)} type="button">
-                        <MessageSquareReply size={15} />
-                        Reply
-                      </button>
-                      <button className="ghost-button slim danger" disabled={!user} onClick={() => deleteReview(review)} type="button">
-                        <Trash2 size={15} />
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </>
-          ) : (
-            <EmptyState icon={Compass} label="No place selected" />
-          )}
-        </div>
+        <PlaceDetailPanel
+          canReview={Boolean(user)}
+          comment={comment}
+          onCommentChange={setComment}
+          onDeleteReview={deleteReview}
+          onRatingChange={setRating}
+          onReplyReview={replyReview}
+          onReportReview={reportReview}
+          onReviewFilesChange={setReviewFiles}
+          onSubmitReview={submitReview}
+          rating={rating}
+          reviewFiles={reviewFiles}
+          reviews={reviews}
+          selected={selected}
+        />
       </div>
     </section>
   )

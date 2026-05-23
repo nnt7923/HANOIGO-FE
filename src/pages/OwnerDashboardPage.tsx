@@ -160,7 +160,7 @@ export function OwnerDashboardPage() {
       <header className="page-header">
         <div>
           <span className="eyebrow">Owner workspace</span>
-          <h1>Places</h1>
+          <h1>Manage places</h1>
         </div>
       </header>
       {error && <p className="surface-error">{error}</p>}

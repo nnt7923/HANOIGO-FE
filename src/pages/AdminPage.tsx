@@ -135,7 +135,7 @@ export function AdminPage() {
     <section className="page-grid">
       <header className="page-header">
         <div>
-          <span className="eyebrow">Moderation</span>
+          <span className="eyebrow">Operations</span>
           <h1>Admin</h1>
         </div>
         <button className="ghost-button" onClick={load} type="button">

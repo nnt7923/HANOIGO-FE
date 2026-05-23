@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react'
+import { LogOut, MapPin } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { Avatar } from '../ui/Avatar'
@@ -13,14 +13,16 @@ export function AppLayout() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-mark">HG</div>
+      <header className="app-topbar">
+        <Link className="brand" to="/discover">
+          <div className="brand-mark">
+            <MapPin size={20} />
+          </div>
           <div>
             <strong>HanoiGo</strong>
             <span>Map your Hanoi</span>
           </div>
-        </div>
+        </Link>
 
         <nav className="nav-list" aria-label="Primary">
           {visibleNav.map((item) => {
@@ -50,14 +52,12 @@ export function AppLayout() {
                   <span>{user.role}</span>
                 </div>
               </div>
-              <button className="ghost-button" onClick={logout} type="button">
+              <button className="icon-button" onClick={logout} title="Logout" type="button">
                 <LogOut size={16} />
-                Logout
               </button>
             </>
           ) : (
-            <div className="guest-panel">
-              <span className="muted">Save trips, review places, and manage your spots.</span>
+            <div className="guest-actions">
               <Link className="primary-button" to="/login">
                 Login
               </Link>
@@ -67,7 +67,7 @@ export function AppLayout() {
             </div>
           )}
         </div>
-      </aside>
+      </header>
 
       <main className="main-surface">
         <Outlet />
