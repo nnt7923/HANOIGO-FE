@@ -31,13 +31,6 @@ npm run lint
 npm run preview
 ```
 
-## Environment
-
-```env
-VITE_API_URL=http://localhost:5000/api
-VITE_GOOGLE_CLIENT_ID=
-```
-
 ## Structure
 
 ```text
