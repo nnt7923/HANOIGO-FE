@@ -149,114 +149,176 @@ export function AdminPage() {
       <div className="admin-grid">
         <section className="admin-section">
           <h2>Owner requests</h2>
-          <div className="item-list">
-            {ownerRequests.map((request) => (
-              <article className="compact-item" key={request._id}>
-                <strong>{request.businessName}</strong>
-                <span>{request.user?.email ?? 'pending user'}</span>
-                <span>{request.businessAddress}</span>
-                <span>{request.reason}</span>
-                <div className="toolbar">
-                  <button className="ghost-button slim" onClick={() => approveOwner(request._id)} type="button">
-                    <Check size={15} />
-                    Approve
-                  </button>
-                  <button className="ghost-button slim danger" onClick={() => rejectOwner(request._id)} type="button">
-                    <X size={15} />
-                    Reject
-                  </button>
-                </div>
-              </article>
-            ))}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Business</th>
+                  <th>User</th>
+                  <th>Address</th>
+                  <th>Reason</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ownerRequests.map((request) => (
+                  <tr key={request._id}>
+                    <td><strong>{request.businessName}</strong></td>
+                    <td>{request.user?.email ?? 'pending user'}</td>
+                    <td>{request.businessAddress}</td>
+                    <td>{request.reason}</td>
+                    <td>
+                      <div className="toolbar">
+                        <button className="ghost-button slim" onClick={() => approveOwner(request._id)} type="button">
+                          <Check size={15} />
+                          Approve
+                        </button>
+                        <button className="ghost-button slim danger" onClick={() => rejectOwner(request._id)} type="button">
+                          <X size={15} />
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
         <section className="admin-section">
           <h2>Users</h2>
-          <div className="item-list">
-            {users.map((item) => (
-              <article className="compact-item" key={item.id}>
-                <strong>
-                  <Users size={15} />
-                  {item.name}
-                </strong>
-                <span>
-                  {item.email} | {item.role} | {item.subscriptionPlan}
-                </span>
-                <div className="toolbar">
-                  <select aria-label="Role" onChange={(event) => updateRole(item.id, event.target.value as UserRole)} value={item.role}>
-                    <option value="user">user</option>
-                    <option value="owner">owner</option>
-                    <option value="admin">admin</option>
-                  </select>
-                  <select
-                    aria-label="Plan"
-                    onChange={(event) => updateSubscription(item.id, { subscriptionPlan: event.target.value as SubscriptionPlan })}
-                    value={item.subscriptionPlan}
-                  >
-                    <option value="free">free</option>
-                    <option value="pro">pro</option>
-                  </select>
-                  <select
-                    aria-label="Subscription status"
-                    onChange={(event) => updateSubscription(item.id, { subscriptionStatus: event.target.value as SubscriptionStatus })}
-                    value={item.subscriptionStatus}
-                  >
-                    <option value="active">active</option>
-                    <option value="canceled">canceled</option>
-                    <option value="expired">expired</option>
-                  </select>
-                </div>
-              </article>
-            ))}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Plan</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <strong>
+                        <Users size={15} />
+                        {item.name}
+                      </strong>
+                    </td>
+                    <td>{item.email}</td>
+                    <td>
+                      <select aria-label="Role" onChange={(event) => updateRole(item.id, event.target.value as UserRole)} value={item.role}>
+                        <option value="user">user</option>
+                        <option value="owner">owner</option>
+                        <option value="admin">admin</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        aria-label="Plan"
+                        onChange={(event) => updateSubscription(item.id, { subscriptionPlan: event.target.value as SubscriptionPlan })}
+                        value={item.subscriptionPlan}
+                      >
+                        <option value="free">free</option>
+                        <option value="pro">pro</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        aria-label="Subscription status"
+                        onChange={(event) => updateSubscription(item.id, { subscriptionStatus: event.target.value as SubscriptionStatus })}
+                        value={item.subscriptionStatus}
+                      >
+                        <option value="active">active</option>
+                        <option value="canceled">canceled</option>
+                        <option value="expired">expired</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
         <section className="admin-section">
           <h2>Places</h2>
-          <div className="item-list">
-            {places.map((place) => (
-              <article className="compact-item" key={place._id}>
-                <strong>{place.name}</strong>
-                <span>
-                  {place.status} | {place.category} | {place.address}
-                </span>
-                <div className="toolbar">
-                  <button className="ghost-button slim" onClick={() => moderatePlace(place, 'approve')} type="button">
-                    <Check size={15} />
-                    Approve
-                  </button>
-                  <button className="ghost-button slim danger" onClick={() => moderatePlace(place, 'reject')} type="button">
-                    <X size={15} />
-                    Reject
-                  </button>
-                  <button className="ghost-button slim" onClick={() => moderatePlace(place, 'suspend')} type="button">
-                    <Slash size={15} />
-                    Suspend
-                  </button>
-                </div>
-              </article>
-            ))}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Place</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Address</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {places.map((place) => (
+                  <tr key={place._id}>
+                    <td><strong>{place.name}</strong></td>
+                    <td>{place.category}</td>
+                    <td><span className="pill compact">{place.status}</span></td>
+                    <td>{place.address}</td>
+                    <td>
+                      <div className="toolbar">
+                        <button className="ghost-button slim" onClick={() => moderatePlace(place, 'approve')} type="button">
+                          <Check size={15} />
+                          Approve
+                        </button>
+                        <button className="ghost-button slim danger" onClick={() => moderatePlace(place, 'reject')} type="button">
+                          <X size={15} />
+                          Reject
+                        </button>
+                        <button className="ghost-button slim" onClick={() => moderatePlace(place, 'suspend')} type="button">
+                          <Slash size={15} />
+                          Suspend
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 
         <section className="admin-section">
           <h2>Content</h2>
-          <div className="item-list">
-            {posts.map((post) => (
-              <article className="compact-item" key={post._id}>
-                <strong>{displayAuthor(post.author)}</strong>
-                <span>{displayPlace(post.place)}</span>
-                <p>{post.content}</p>
-                <span>
-                  {post.status} | reports {post.reportCount}
-                </span>
-                <button className="ghost-button slim" onClick={() => hidePost(post)} type="button">
-                  <EyeOff size={15} />
-                  {post.status === 'hidden' ? 'Unhide' : 'Hide'}
-                </button>
-              </article>
-            ))}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Author</th>
+                  <th>Place</th>
+                  <th>Content</th>
+                  <th>Status</th>
+                  <th>Reports</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post._id}>
+                    <td><strong>{displayAuthor(post.author)}</strong></td>
+                    <td>{displayPlace(post.place)}</td>
+                    <td>{post.content}</td>
+                    <td><span className="pill compact">{post.status}</span></td>
+                    <td>{post.reportCount}</td>
+                    <td>
+                      <button className="ghost-button slim" onClick={() => hidePost(post)} type="button">
+                        <EyeOff size={15} />
+                        {post.status === 'hidden' ? 'Unhide' : 'Hide'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
 

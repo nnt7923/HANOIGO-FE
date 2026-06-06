@@ -9,6 +9,7 @@ import { CommunityPage } from '../pages/CommunityPage'
 import { ItinerariesPage } from '../pages/ItinerariesPage'
 import { LoginPage } from '../pages/LoginPage'
 import { OwnerDashboardPage } from '../pages/OwnerDashboardPage'
+import { PackagesPage } from '../pages/PackagesPage'
 import { PlacesPage } from '../pages/PlacesPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { RegisterPage } from '../pages/RegisterPage'
@@ -20,9 +21,11 @@ export function AppRoutes() {
       <Route element={<AppLayout />}>
         <Route index element={<Navigate replace to="/discover" />} />
         <Route path="discover" element={<PlacesPage />} />
+        <Route path="map" element={<PlacesPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="itineraries" element={<ItinerariesPage />} />
+        <Route path="packages" element={<PackagesPage />} />
         <Route path="community" element={<CommunityPage />} />
         <Route
           path="profile"

@@ -92,7 +92,7 @@ export function ItinerariesPage() {
           <span className="eyebrow">Personal routes</span>
           <h1>Plan a Hanoi route</h1>
         </div>
-        <div className="segmented compact-tabs">
+        <div className="tab-row compact-tabs" role="tablist" aria-label="Itinerary views">
           <button className={view === 'current' ? 'selected' : ''} onClick={() => setView('current')} type="button">
             Current
           </button>
@@ -108,7 +108,14 @@ export function ItinerariesPage() {
       {error && <p className="surface-error">{error}</p>}
 
       <div className="split-layout planner">
-        <form className="panel-form" onSubmit={generate}>
+        <form className="panel-form ai-box" onSubmit={generate}>
+          <div className="panel-title inline">
+            <div>
+              <strong>AI route builder</strong>
+              <span>Generate a route from area, budget, and travel preferences.</span>
+            </div>
+            <Sparkles size={18} />
+          </div>
           <Field label="Area" value={area} onChange={setArea} required />
           <div className="two-col">
             <Field label="Days" min={1} type="number" value={String(days)} onChange={(value) => setDays(Number(value))} />
@@ -181,11 +188,15 @@ function ItineraryListItem({
   onVisibilityChange?: (id: string, visibility: ItineraryVisibility) => void
 }) {
   return (
-    <article className="compact-item">
-      <strong>{item.title}</strong>
-      <span>
-        {item.area} | {item.days} days | {item.cloneCount} clones | {item.visibility}
-      </span>
+    <article className="compact-item trip-row">
+      <span className={item.visibility === 'public' ? 'trip-dot active' : 'trip-dot planned'} aria-hidden="true" />
+      <div className="trip-info">
+        <strong>{item.title}</strong>
+        <span>
+          {item.area} | {item.days} days | {item.cloneCount} clones
+        </span>
+      </div>
+      <span className="trip-badge">{item.visibility}</span>
       <div className="toolbar">
         {onSelect && (
           <button className="ghost-button slim" onClick={() => onSelect(item)} type="button">

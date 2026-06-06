@@ -5,6 +5,13 @@ import { Avatar } from '../ui/Avatar'
 import './AppLayout.css'
 import { navigation } from './navigation'
 
+const navSections = [
+  { id: 'discover', label: 'Khám phá' },
+  { id: 'planning', label: 'Lập lịch' },
+  { id: 'account', label: 'Tài khoản' },
+  { id: 'admin', label: 'Quản trị' },
+] as const
+
 export function AppLayout() {
   const { user, logout, bootstrapping } = useAuth()
   const visibleNav = navigation.filter(
@@ -13,34 +20,48 @@ export function AppLayout() {
 
   return (
     <div className="app-shell">
-      <header className="app-topbar">
+      <aside className="app-topbar">
         <Link className="brand" to="/discover">
           <div className="brand-mark">
             <MapPin size={20} />
           </div>
           <div>
             <strong>HanoiGo</strong>
-            <span>Map your Hanoi</span>
+            <span>Plan your Hanoi</span>
           </div>
         </Link>
 
         <nav className="nav-list" aria-label="Primary">
-          {visibleNav.map((item) => {
-            const Icon = item.icon
+          {navSections.map((section) => {
+            const items = visibleNav.filter((item) => item.section === section.id)
+            if (items.length === 0) return null
+
             return (
-              <NavLink
-                className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
-                key={item.path}
-                to={item.path}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </NavLink>
+              <div className="nav-group" key={section.id}>
+                <span className="nav-section">{section.label}</span>
+                {items.map((item) => {
+                  const Icon = item.icon
+
+                  return (
+                    <NavLink
+                      className={({ isActive }) => (isActive ? 'nav-item active' : 'nav-item')}
+                      key={item.path}
+                      to={item.path}
+                    >
+                      <Icon size={18} />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className={item.badgeTone === 'green' ? 'nav-badge green' : 'nav-badge'}>{item.badge}</span>
+                      )}
+                    </NavLink>
+                  )
+                })}
+              </div>
             )
           })}
         </nav>
 
-        <div className="session-panel">
+        <div className="session-panel sidebar-user">
           {bootstrapping ? (
             <span className="muted">Loading session</span>
           ) : user ? (
@@ -59,15 +80,15 @@ export function AppLayout() {
           ) : (
             <div className="guest-actions">
               <Link className="primary-button" to="/login">
-                Login
+                Đăng nhập
               </Link>
               <Link className="ghost-button" to="/register">
-                Register
+                Đăng ký
               </Link>
             </div>
           )}
         </div>
-      </header>
+      </aside>
 
       <main className="main-surface">
         <Outlet />
